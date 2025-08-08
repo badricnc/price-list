@@ -1,0 +1,21 @@
+:root{--accent:#1e3d59;--muted:#6c757d}
+*{box-sizing:border-box}
+body{font-family:Inter, Arial, sans-serif;margin:0;background:#f6f7fb;color:#111}
+.site-header{display:flex;align-items:center;gap:16px;padding:14px 20px;background:var(--accent);color:white}
+.site-header .logo{height:44px}
+.container{max-width:1100px;margin:20px auto;padding:0 18px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:white;border-radius:8px;padding:18px;box-shadow:0 6px 20px rgba(15,25,50,0.06);text-decoration:none;color:inherit}
+.big-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;height:120px}
+.card-title{font-weight:700;font-size:16px}
+.card-sub{font-size:13px;color:var(--muted);margin-top:6px}
+.card-link{display:block}
+.muted{color:var(--muted)}
+.back-btn{background:transparent;border:1px solid #ddd;padding:8px 12px;border-radius:6px;cursor:pointer}
+.row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.search-wrapper{margin-left:auto}
+.search-wrapper input,#sizeSearch{padding:8px 10px;border:1px solid #ccc;border-radius:6px}
+table{width:100%;border-collapse:collapse;margin-top:12px;background:white}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+th{background:var(--accent);color:white}
+@media (max-width:600px){.cards-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
