@@ -1,150 +1,116 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Product — Badri CNC Tooling</title>
-  <style>
-    :root{--accent:#1e3d59;--muted:#6c757d}
-    *{box-sizing:border-box}
-    body{font-family:Inter, Arial, sans-serif;margin:0;background:#f6f7fb;color:#111}
-    .site-header{display:flex;align-items:center;gap:16px;padding:14px 20px;background:var(--accent);color:white}
-    .site-header .logo{height:44px}
-    .container{max-width:1100px;margin:20px auto;padding:0 18px}
-    .back-btn{background:transparent;border:1px solid #ddd;padding:8px 12px;border-radius:6px;cursor:pointer}
-    .row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .search-wrapper{margin-left:auto}
-    .search-wrapper input,#sizeSearch{padding:8px 10px;border:1px solid #ccc;border-radius:6px}
-    .muted{color:var(--muted)}
-    table{width:100%;border-collapse:collapse;margin-top:12px;background:white;box-shadow:0 4px 14px rgba(10,20,40,0.05)}
-    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
-    th{background:var(--accent);color:white}
-    @media (max-width:600px){.container{padding:12px}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badri CNC Tooling - Products</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #222;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        header img {
+            height: 40px;
+            vertical-align: middle;
+        }
+        h1 {
+            display: inline;
+            margin-left: 10px;
+        }
+        .search-container {
+            text-align: center;
+            margin: 20px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            font-size: 16px;
+        }
+        table {
+            width: 90%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        tr:hover {
+            background: #f1f1f1;
+        }
+    </style>
 </head>
 <body>
-  <header class="site-header">
-    <img class="logo" src="https://via.placeholder.com/160x50?text=Badri+CNC" alt="Badri CNC Tooling">
-    <h1 id="productHeader">Product</h1>
-  </header>
 
-  <main class="container">
-    <div class="row">
-      <button class="back-btn" onclick="goBack()">← Back</button>
-      <div class="search-wrapper">
-        <input id="sizeSearch" placeholder="Search size (e.g. 10mm)"/>
-      </div>
-    </div>
+<header>
+    <img src="https://via.placeholder.com/150x40?text=Badri+CNC+Tooling" alt="Company Logo">
+    <h1>Product List</h1>
+</header>
 
-    <div id="tableWrap">
-      <div id="loading" class="muted">Loading sizes...</div>
-      <table id="sizesTable" style="display:none;">
-        <thead>
-          <tr><th>Brand</th><th>Product</th><th>Size</th><th>Price</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div id="noResults" class="muted" style="display:none;margin-top:12px"></div>
-    </div>
-  </main>
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search by size..." onkeyup="searchTable()">
+</div>
 
-<script>
-/* ---------------- CONFIG ---------------- */
-const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gOi3FoAsMGgM_3yQnfJwLAPVd0Uj-fo8qBXg9m2kWGp_AeKee_zmqb_XejPW4hs2OGAIPsccALkI/pub?output=csv";
-/* ---------------------------------------- */
-
-console.log("product.html script loaded");
-
-function goBack() {
-  const p = new URLSearchParams(location.search);
-  const brand = p.get('brand') || '';
-  if (brand) location.href = `brand.html?brand=${encodeURIComponent(brand)}`;
-  else location.href = 'index.html';
-}
-
-// Simple CSV parser that supports quoted commas
-function parseCSV(text){
-  const lines = text.trim().split(/\r?\n/).filter(Boolean);
-  if(!lines.length) return [];
-  const headers = lines[0].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(h=>h.replace(/^"|"$/g,'').trim());
-  const rows = lines.slice(1).map(line=>{
-    const cols = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
-    const obj = {};
-    headers.forEach((h,i)=> obj[h] = cols[i] !== undefined ? cols[i] : '');
-    return obj;
-  });
-  return rows;
-}
-
-function formatPrice(raw){
-  if(!raw) return '';
-  const n = Number(String(raw).replace(/[^0-9.\-]/g,''));
-  if(!isNaN(n)) return '\u20B9 ' + n.toLocaleString('en-IN');
-  return raw;
-}
-
-/* Main flow */
-(async function(){
-  console.log("product page: start");
-  const params = new URLSearchParams(location.search);
-  const brandParam = params.get('brand') || '';
-  const productParam = params.get('product') || '';
-  console.log("product page params:", { brandParam, productParam });
-
-  document.getElementById('productHeader').textContent = `${brandParam || 'Product' }${ productParam ? ' — ' + productParam : '' }`;
-
-  // fetch CSV
-  try {
-    const resp = await fetch(CSV_LINK);
-    console.log("fetch status:", resp.status);
-    if(!resp.ok) throw new Error('Fetch returned ' + resp.status);
-    const txt = await resp.text();
-    console.log("fetched CSV length:", txt.length);
-    const data = parseCSV(txt);
-    console.log("parsed rows:", data.length);
-    // normalize
-    const rows = data.map(r => ({
-      Brand: (r.Brand || r.brand || '').trim(),
-      Product: (r.Product || r.product || '').trim(),
-      Size: (r.Size || r.size || '').trim(),
-      Price: (r.Price || r.price || '').trim()
-    }));
-    // perform case-insensitive matching
-    const brandKey = (brandParam || '').trim().toLowerCase();
-    const productKey = (productParam || '').trim().toLowerCase();
-
-    const filteredRows = rows.filter(r =>
-      r.Brand.toLowerCase() === brandKey && r.Product.toLowerCase() === productKey
-    );
-    console.log("filtered rows count:", filteredRows.length);
-
-    document.getElementById('loading').style.display = 'none';
-    const table = document.getElementById('sizesTable');
-    const tbody = table.querySelector('tbody');
-    const noResults = document.getElementById('noResults');
-
-    function renderTable(filterTerm='') {
-      const q = (filterTerm||'').trim().toLowerCase();
-      const matched = filteredRows.filter(r => !q || (r.Size||'').toLowerCase().includes(q));
-      if(!matched.length){
-        table.style.display = 'none';
-        tbody.innerHTML = '';
-        noResults.style.display = 'block';
-        noResults.textContent = `No matching sizes${ filterTerm ? ' for "'+filterTerm+'"' : '' }`;
-        return;
-      }
-      noResults.style.display = 'none';
-      table.style.display = 'table';
-      tbody.innerHTML = matched.map(r => `
+<table id="productTable">
+    <thead>
         <tr>
-          <td>${r.Brand}</td>
-          <td>${r.Product}</td>
-          <td>${r.Size}</td>
-          <td>${formatPrice(r.Price)}</td>
+            <th>Product Name</th>
+            <th>Size</th>
+            <th>Price</th>
         </tr>
-      `).join('');
-    }
+    </thead>
+    <tbody></tbody>
+</table>
+<script src='product.js'></script>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const brandName = urlParams.get("brand"); // Get brand from query string
 
-    // if no rows found for the brand/product show helpful info
-    if(filteredRows.length === 0){
-      const availableP
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gOi3FoAsMGgM_3yQnfJwLAPVd0Uj-fo8qBXg9m2kWGp_AeKee_zmqb_XejPW4hs2OGAIPsccALkI/pub?output=csv";
+
+    fetch(sheetUrl)
+        .then(response => response.text())
+        .then(data => {
+            const rows = data.split("\n").map(row => row.split(","));
+            const tableBody = document.querySelector("#productTable tbody");
+            
+            rows.slice(1).forEach(row => {
+                if (row[0].trim().toLowerCase() === brandName.trim().toLowerCase()) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `<td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td>`;
+                    tableBody.appendChild(tr);
+                }
+            });
+        })
+        .catch(error => console.error("Error loading CSV:", error));
+
+    function searchTable() {
+        const input = document.getElementById("searchInput").value.toLowerCase();
+        const rows = document.querySelectorAll("#productTable tbody tr");
+        rows.forEach(row => {
+            const sizeCell = row.cells[1].textContent.toLowerCase();
+            if (sizeCell.includes(input)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
