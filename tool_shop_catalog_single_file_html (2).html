@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool Shop Price List</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f8f9fa;
+    }
+    /* Header */
+    header {
+        background-color: #1e3d59;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    header img {
+        height: 50px;
+        margin-right: 15px;
+    }
+    header h1 {
+        font-size: 1.8rem;
+        margin: 0;
+    }
+    /* Brand buttons */
+    #brand-buttons {
+        margin: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .brand-btn {
+        background-color: #1e3d59;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    .brand-btn:hover {
+        background-color: #2e5c84;
+    }
+    /* Search bar */
+    #search-bar {
+        margin: 0 20px 20px 20px;
+        padding: 10px;
+        width: calc(100% - 40px);
+        max-width: 400px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    /* Table styling */
+    table {
+        width: 95%;
+        margin: auto;
+        border-collapse: collapse;
+        background: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    th, td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+    th {
+        background-color: #1e3d59;
+        color: white;
+    }
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <img src="https://via.placeholder.com/100x50?text=Logo" alt="Company Logo">
+    <h1>My Tool Shop</h1>
+</header>
+
+<div id="brand-buttons"></div>
+<input type="text" id="search-bar" placeholder="Search products...">
+
+<table id="product-table">
+    <thead>
+        <tr>
+            <th>Brand</th>
+            <th>Item Name</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+const sheetUrl = "https://docs.google.com/spreadsheets/d/14nDgMBzl1wVGrkiMGuZ3W6doy9ewquQz2XJwq71B7HM/gviz/tq?tqx=out:csv
+"; // Replace with your CSV link
+
+let allProducts = [];
+let currentBrand = null;
+
+fetch(sheetUrl)
+    .then(res => res.text())
+    .then(data => {
+        const rows = data.split("\n").map(r => r.split(","));
+        const headers = rows.shift();
+        const brandIndex = headers.indexOf("Brand");
+        const nameIndex = headers.indexOf("Item Name");
+        const priceIndex = headers.indexOf("Price");
+
+        allProducts = rows.map(r => ({
+            brand: r[brandIndex],
+            name: r[nameIndex],
+            price: r[priceIndex]
+        }));
+
+        const brands = [...new Set(allProducts.map(p => p.brand))];
+        renderBrandButtons(brands);
+        renderTable(allProducts);
+    });
+
+function renderBrandButtons(brands) {
+    const container = document.getElementById("brand-buttons");
+    const allBtn = document.createElement("button");
+    allBtn.textContent = "All Brands";
+    allBtn.className = "brand-btn";
+    allBtn.onclick = () => {
+        currentBrand = null;
+        renderTable(allProducts);
+    };
+    container.appendChild(allBtn);
+
+    brands.forEach(brand => {
+        const btn = document.createElement("button");
+        btn.textContent = brand;
+        btn.className = "brand-btn";
+        btn.onclick = () => {
+            currentBrand = brand;
+            renderTable(allProducts.filter(p => p.brand === brand));
+        };
+        container.appendChild(btn);
+    });
+}
+
+function renderTable(products) {
+    const searchTerm = document.getElementById("search-bar").value.toLowerCase();
+    const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm) ||
+        p.brand.toLowerCase().includes(searchTerm)
+    );
+
+    const tbody = document.querySelector("#product-table tbody");
+    tbody.innerHTML = "";
+    filtered.forEach(p => {
+        const row = `<tr>
+            <td>${p.brand}</td>
+            <td>${p.name}</td>
+            <td>${p.price}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+
+document.getElementById("search-bar").addEventListener("input", () => {
+    const productsToShow = currentBrand
+        ? allProducts.filter(p => p.brand === currentBrand)
+        : allProducts;
+    renderTable(productsToShow);
+});
+</script>
+
+</body>
+</html>
