@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Google Sheet CSV link
-    const sheetUrl = "YOUR_GOOGLE_SHEET_CSV_LINK"; // <-- Replace with your sheet's CSV export link
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1Us8tM1vVnlVzS1PcdA6WeZVzvhJ3F6ws/export?format=csv";
 
     fetch(sheetUrl)
         .then(response => response.text())
