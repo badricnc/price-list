@@ -2,20 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Brand Products</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brand Products - Badri CNC Tooling</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+        }
+        header {
+            background: #222;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+        }
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <img src="logo-placeholder.png" alt="Badri CNC Tooling Logo" class="logo">
-        <h1 id="brandTitle">Products</h1>
+        <h1 id="page-title">Brand Products</h1>
     </header>
 
-    <main>
-        <div id="productCards" class="card-container"></div>
-    </main>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Size</th>
+            </tr>
+        </thead>
+        <tbody id="brand-table-body">
+            <tr><td colspan="2" class="no-data">Loading...</td></tr>
+        </tbody>
+    </table>
 
-    <script src="brand.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const brandName = urlParams.get("brand");
+
+            // Update page title
+            const titleElement = document.getElementById("page-title");
+            if (titleElement) {
+                titleElement.textContent = `${brandName} Products`;
+            }
+
+            const sheetUrl = "https://docs.google.com/spreadsheets/d/1Us8tM1vVnlVzS1PcdA6WeZVzvhJ3F6ws/export?format=csv";
+
+            fetch(sheetUrl)
+                .then(response => response.text())
+                .then(data => {
+                    const rows = Papa.parse(data, { header: true }).data;
+                    const tableBody = document.getElementById("brand-table-body");
+
+                    // Filter rows by brand
+                    const filteredRows = rows.filter(row => row.brand?.trim() === brandName);
+
+                    if (filteredRows.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="2" class="no-data">No products found for ${brandName}</td></tr>`;
+                        return;
+                    }
+
+                    tableBody.innerHTML = "";
+                    filteredRows.forEach(row => {
+                        const tr = document.createElement("tr");
+
+                        // Pass both brand & product to product.html
+                        tr.innerHTML = `
+                            <td><a href="product.html?brand=${encodeURIComponent(row.brand)}&product=${encodeURIComponent(row.product)}">${row.product}</a></td>
+                            <td>${row.size || ""}</td>
+                        `;
+
+                        tableBody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error loading data:", error);
+                    document.getElementById("brand-table-body").innerHTML =
+                        `<tr><td colspan="2" class="no-data">Error loading data</td></tr>`;
+                });
+        });
+    </script>
 </body>
 </html>
