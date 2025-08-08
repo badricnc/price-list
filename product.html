@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Product — Badri CNC Tooling</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <img class="logo" src="https://via.placeholder.com/160x50?text=Badri+CNC" alt="Badri CNC Tooling">
+    <h1 id="productHeader">Product</h1>
+  </header>
+
+  <main class="container">
+    <div class="row">
+      <button class="back-btn" onclick="goBack()">← Back</button>
+      <div class="search-wrapper">
+        <input id="sizeSearch" placeholder="Search size (e.g. 10mm)" />
+      </div>
+    </div>
+
+    <div id="tableWrap">
+      <table id="sizesTable">
+        <thead>
+          <tr><th>Brand</th><th>Product</th><th>Size</th><th>Price</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="noResults" class="muted" style="display:none;margin-top:12px">No matching sizes</div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    function goBack(){
+      const params = new URLSearchParams(location.search);
+      const brand = params.get('brand');
+      window.location = `brand.html?brand=${encodeURIComponent(brand)}`;
+    }
+
+    (async function(){
+      const params = new URLSearchParams(location.search);
+      const brand = params.get('brand') || '';
+      const product = params.get('product') || '';
+      document.getElementById('productHeader').textContent = `${brand} — ${product}`;
+
+      const data = await window.loadCSVData();
+      let rows = data.filter(r => r.Brand.trim()===brand && r.Product.trim()===product)
+                     .map(r => ({ Size: r.Size.trim(), Price: r.Price.trim(), Brand: r.Brand.trim(), Product: r.Product.trim() }));
+
+      const tbody = document.querySelector('#sizesTable tbody');
+      function renderRows(filterTerm=''){
+        const q = filterTerm.trim().toLowerCase();
+        const filtered = rows.filter(r => !q || r.Size.toLowerCase().includes(q));
+        if(!filtered.length){ tbody.innerHTML=''; document.getElementById('noResults').style.display='block'; return; }
+        document.getElementById('noResults').style.display='none';
+        tbody.innerHTML = filtered.map(r => `\n          <tr>\n            <td>${r.Brand}</td>\n            <td>${r.Product}</td>\n            <td>${r.Size}</td>\n            <td>${formatPrice(r.Price)}</td>\n          </tr>\n        `).join('');
+      }
+</html>
