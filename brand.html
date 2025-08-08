@@ -1,119 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Brand Products</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f4f4f4;
-        }
-        header {
-            background: #222;
-            color: #fff;
-            padding: 1rem;
-            text-align: center;
-        }
-        h1 {
-            margin: 0;
-        }
-        table {
-            width: 90%;
-            margin: 20px auto;
-            border-collapse: collapse;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background: #333;
-            color: white;
-        }
-        a {
-            color: #007BFF;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .no-data {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Brand Products — Badri CNC Tooling</title>
+<style>
+  :root{--accent:#1e3d59;--muted:#6c757d}
+  *{box-sizing:border-box}
+  body{font-family:Inter, Arial, sans-serif;margin:0;background:#f6f7fb;color:#111}
+  .site-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--accent);color:white}
+  .logo{height:44px}
+  .container{max-width:1100px;margin:18px auto;padding:0 16px}
+  .back-btn{background:#fff;border:1px solid #ddd;padding:8px 12px;border-radius:6px;cursor:pointer}
+  h1{margin:8px 0 16px}
+  table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 6px 18px rgba(10,20,40,0.04)}
+  th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+  th{background:var(--accent);color:#fff}
+  .muted{color:var(--muted)}
+  .no-data{text-align:center;padding:18px;font-style:italic}
+  a.link-button{display:inline-block;padding:6px 10px;background:#1e88e5;color:#fff;border-radius:6px;text-decoration:none}
+  @media(max-width:600px){.container{padding:0 10px}}
+</style>
 </head>
 <body>
-    <header>
-        <h1 id="page-title">Brand Products</h1>
-    </header>
+  <header class="site-header">
+    <img class="logo" src="https://via.placeholder.com/160x44?text=Badri+CNC" alt="Logo">
+    <div>
+      <div style="font-weight:700">Badri CNC Tooling</div>
+      <div style="font-size:13px;color:#d6e3ff">Products by brand</div>
+    </div>
+  </header>
 
-    <table>
+  <main class="container">
+    <button class="back-btn" onclick="location.href='index.html'">← Back to home</button>
+    <h1 id="brandTitle">Brand Products</h1>
+
+    <div id="content">
+      <div id="loading" class="muted">Loading products…</div>
+      <div id="noData" class="no-data" style="display:none"></div>
+
+      <table id="brandTable" style="display:none">
         <thead>
-            <tr>
-                <th>Product</th>
-                <th>Size</th>
-            </tr>
+          <tr><th>Product</th><th>Sample Size</th><th>Action</th></tr>
         </thead>
-        <tbody id="brand-table-body">
-            <tr><td colspan="2" class="no-data">Loading...</td></tr>
-        </tbody>
-    </table>
+        <tbody id="brand-table-body"></tbody>
+      </table>
+    </div>
+  </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            const brandName = urlParams.get("brand");
+<script>
+/* ------------ CONFIG: your published CSV link ----------- */
+const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gOi3FoAsMGgM_3yQnfJwLAPVd0Uj-fo8qBXg9m2kWGp_AeKee_zmqb_XejPW4hs2OGAIPsccALkI/pub?output=csv";
+/* ------------------------------------------------------ */
 
-            // Update page title
-            const titleElement = document.getElementById("page-title");
-            if (titleElement) {
-                titleElement.textContent = `${brandName} Products`;
-            }
+console.log("brand.html loaded");
 
-            const sheetUrl = "https://docs.google.com/spreadsheets/d/1Us8tM1vVnlVzS1PcdA6WeZVzvhJ3F6ws/export?format=csv";
+function parseCSV(text){
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  if(!lines.length) return [];
+  const headers = lines[0].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(h=>h.replace(/^"|"$/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const cols = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c=>c.replace(/^"|"$/g,'').trim());
+    const obj = {};
+    headers.forEach((h,i)=> obj[h]= cols[i] !== undefined ? cols[i] : '');
+    return obj;
+  });
+}
 
-            fetch(sheetUrl)
-                .then(response => response.text())
-                .then(data => {
-                    const rows = Papa.parse(data, { header: true }).data;
-                    const tableBody = document.getElementById("brand-table-body");
+(async function(){
+  const params = new URLSearchParams(location.search);
+  const brandParam = (params.get('brand')||'').trim();
+  document.getElementById('brandTitle').textContent = brandParam ? `${brandParam} — Products` : 'Brand Products';
 
-                    // Filter rows by brand
-                    const filteredRows = rows.filter(row => row.brand?.trim() === brandName);
+  try {
+    console.log("Fetching CSV:", CSV_LINK);
+    const res = await fetch(CSV_LINK);
+    console.log("Fetch status:", res.status);
+    if(!res.ok) throw new Error('Fetch failed '+res.status);
+    const text = await res.text();
+    console.log("CSV length:", text.length);
+    const rows = parseCSV(text);
+    console.log("Parsed rows:", rows.length);
 
-                    if (filteredRows.length === 0) {
-                        tableBody.innerHTML = `<tr><td colspan="2" class="no-data">No products found for ${brandName}</td></tr>`;
-                        return;
-                    }
+    const normalized = rows.map(r=>({
+      Brand: (r.Brand||r.brand||'').trim(),
+      Product: (r.Product||r.product||'').trim(),
+      Size: (r.Size||r.size||'').trim(),
+      Price: (r.Price||r.price||'').trim()
+    }));
 
-                    tableBody.innerHTML = "";
-                    filteredRows.forEach(row => {
-                        const tr = document.createElement("tr");
+    const filtered = normalized.filter(r => r.Brand.toLowerCase() === brandParam.toLowerCase());
+    document.getElementById('loading').style.display = 'none';
 
-                        // Pass both brand & product to product.html
-                        tr.innerHTML = `
-                            <td><a href="product.html?brand=${encodeURIComponent(row.brand)}&product=${encodeURIComponent(row.product)}">${row.product}</a></td>
-                            <td>${row.size || ""}</td>
-                        `;
+    if(!filtered.length){
+      document.getElementById('noData').style.display = 'block';
+      document.getElementById('noData').textContent = `No products found for "${brandParam}"`;
+      return;
+    }
 
-                        tableBody.appendChild(tr);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error loading data:", error);
-                    document.getElementById("brand-table-body").innerHTML =
-                        `<tr><td colspan="2" class="no-data">Error loading data</td></tr>`;
-                });
-        });
-    </script>
+    // group by product and pick a sample size (first)
+    const productMap = {};
+    filtered.forEach(r => {
+      if(!productMap[r.Product]) productMap[r.Product] = r;
+    });
+
+    const tbody = document.getElementById('brand-table-body');
+    tbody.innerHTML = '';
+    Object.values(productMap).forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.Product}</td>
+        <td>${p.Size || '-'}</td>
+        <td><a class="link-button" href="product.html?brand=${encodeURIComponent(p.Brand)}&product=${encodeURIComponent(p.Product)}">View sizes & prices</a></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('brandTable').style.display = 'table';
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('noData').style.display = 'block';
+    document.getElementById('noData').textContent = 'Error loading data — check console.';
+  }
+})();
+</script>
 </body>
 </html>
