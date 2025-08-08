@@ -41,7 +41,7 @@
 
       <table id="brandTable" style="display:none">
         <thead>
-          <tr><th>Product</th><th>Sample Size</th><th>Action</th></tr>
+          <tr><th>Product</th><th>Action</th></tr>
         </thead>
         <tbody id="brand-table-body"></tbody>
       </table>
@@ -49,11 +49,7 @@
   </main>
 
 <script>
-/* ------------ CONFIG: your published CSV link ----------- */
 const CSV_LINK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gOi3FoAsMGgM_3yQnfJwLAPVd0Uj-fo8qBXg9m2kWGp_AeKee_zmqb_XejPW4hs2OGAIPsccALkI/pub?output=csv";
-/* ------------------------------------------------------ */
-
-console.log("brand.html loaded");
 
 function parseCSV(text){
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
@@ -73,20 +69,14 @@ function parseCSV(text){
   document.getElementById('brandTitle').textContent = brandParam ? `${brandParam} — Products` : 'Brand Products';
 
   try {
-    console.log("Fetching CSV:", CSV_LINK);
     const res = await fetch(CSV_LINK);
-    console.log("Fetch status:", res.status);
     if(!res.ok) throw new Error('Fetch failed '+res.status);
     const text = await res.text();
-    console.log("CSV length:", text.length);
     const rows = parseCSV(text);
-    console.log("Parsed rows:", rows.length);
 
     const normalized = rows.map(r=>({
       Brand: (r.Brand||r.brand||'').trim(),
-      Product: (r.Product||r.product||'').trim(),
-      Size: (r.Size||r.size||'').trim(),
-      Price: (r.Price||r.price||'').trim()
+      Product: (r.Product||r.product||'').trim()
     }));
 
     const filtered = normalized.filter(r => r.Brand.toLowerCase() === brandParam.toLowerCase());
@@ -98,7 +88,6 @@ function parseCSV(text){
       return;
     }
 
-    // group by product and pick a sample size (first)
     const productMap = {};
     filtered.forEach(r => {
       if(!productMap[r.Product]) productMap[r.Product] = r;
@@ -110,7 +99,6 @@ function parseCSV(text){
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${p.Product}</td>
-        <td>${p.Size || '-'}</td>
         <td><a class="link-button" href="product.html?brand=${encodeURIComponent(p.Brand)}&product=${encodeURIComponent(p.Product)}">View sizes & prices</a></td>
       `;
       tbody.appendChild(tr);
