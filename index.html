@@ -1,152 +1,38 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Tool Shop Price List</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f8f9fa;
-    }
-    header {
-      background: #343a40;
-      color: white;
-      padding: 15px;
-      display: flex;
-      align-items: center;
-    }
-    header img {
-      height: 50px;
-      margin-right: 15px;
-    }
-    header h1 {
-      font-size: 22px;
-      margin: 0;
-    }
-    .brand-buttons {
-      text-align: center;
-      margin: 15px 0;
-    }
-    .brand-buttons button {
-      margin: 5px;
-      padding: 8px 14px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .brand-buttons button:hover {
-      background-color: #0056b3;
-    }
-    .search-container {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    .search-container input {
-      padding: 8px;
-      width: 300px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    table {
-      width: 90%;
-      margin: auto;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      border: 1px solid #dee2e6;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Badri CNC Tooling — Products We Deal With</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header class="site-header">
+    <img class="logo" src="https://via.placeholder.com/160x50?text=Badri+CNC" alt="Badri CNC Tooling">
+    <h1>Badri CNC Tooling</h1>
+  </header>
 
-<header>
-  <img src="LOGO.PNG" alt="Company Logo">
-  <h1>Tool Shop Price List</h1>
-</header>
+  <main class="container">
+    <h2>Products we deal with</h2>
+    <div id="brandsGrid" class="cards-grid"></div>
+  </main>
 
-<div class="brand-buttons" id="brandButtons"></div>
-
-<div class="search-container">
-  <input type="text" id="searchInput" placeholder="Search products...">
-</div>
-
-<table id="productTable">
-  <thead>
-    <tr>
-      <th>Brand</th>
-      <th>Product</th>
-      <th>Price</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<script>
-  const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4gOi3FoAsMGgM_3yQnfJwLAPVd0Uj-fo8qBXg9m2kWGp_AeKee_zmqb_XejPW4hs2OGAIPsccALkI/pub?output=csv";
-  let allData = [];
-
-  fetch(sheetUrl)
-    .then(res => res.text())
-    .then(csv => {
-      const rows = csv.split("\n").map(row => row.split(","));
-      const headers = rows.shift();
-      allData = rows.map(row => ({
-        brand: row[0],
-        product: row[1],
-        price: row[2]
-      }));
-      renderBrands();
-      renderTable(allData);
-    })
-    .catch(err => {
-      console.error("Error loading sheet:", err);
-      alert("Error loading data. Check console for details.");
-    });
-
-  function renderBrands() {
-    const brands = [...new Set(allData.map(item => item.brand))];
-    const container = document.getElementById("brandButtons");
-    container.innerHTML = `<button onclick="renderTable(allData)">All</button>` +
-      brands.map(brand => `<button onclick="filterBrand('${brand}')">${brand}</button>`).join("");
-  }
-
-  function filterBrand(brand) {
-    const filtered = allData.filter(item => item.brand === brand);
-    renderTable(filtered);
-  }
-
-  function renderTable(data) {
-    const tbody = document.querySelector("#productTable tbody");
-    tbody.innerHTML = data.map(item => `
-      <tr>
-        <td>${item.brand}</td>
-        <td>${item.product}</td>
-        <td>${item.price}</td>
-      </tr>
-    `).join("");
-  }
-
-  document.getElementById("searchInput").addEventListener("input", function () {
-    const searchTerm = this.value.toLowerCase();
-    const filtered = allData.filter(item =>
-      item.brand.toLowerCase().includes(searchTerm) ||
-      item.product.toLowerCase().includes(searchTerm)
-    );
-    renderTable(filtered);
-  });
-</script>
-
+  <script src="script.js"></script>
+  <script>
+    // index-specific: render brand tiles and link to brand.html
+    (async function(){
+      const data = await window.loadCSVData();
+      const brands = [...new Set(data.map(r => r.Brand.trim()))].sort();
+      const grid = document.getElementById('brandsGrid');
+      grid.innerHTML = brands.map(b => `
+        <a class="card-link" href="brand.html?brand=${encodeURIComponent(b)}">
+          <div class="card big-card">
+            <div class="card-title">${b}</div>
+            <div class="card-sub">Click to view products</div>
+          </div>
+        </a>
+      `).join('');
+    })();
+  </script>
 </body>
 </html>
