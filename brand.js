@@ -38,4 +38,9 @@ fetch(sheetURL)
 
 function viewProduct(brand, product) {
     window.location.href = `product.html?brand=${encodeURIComponent(brand)}&product=${encodeURIComponent(product)}`;
+
+    card.addEventListener("click", () => {
+    window.location.href = `product.html?brand=${encodeURIComponent(brandName)}&product=${encodeURIComponent(item.name)}`;
+});
+
 }
